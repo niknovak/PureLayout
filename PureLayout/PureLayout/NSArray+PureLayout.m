@@ -241,7 +241,7 @@
     return [self autoDistributeViewsAlongAxis:axis
                                     alignedTo:alignment
                              withFixedSpacing:spacing
-                                 insetSpacing:YES];
+                                 insetSpacing:spacing];
 }
 
 /**
@@ -252,18 +252,18 @@
  @param axis The axis along which to distribute the views.
  @param alignment The attribute to use to align all the views to one another.
  @param spacing The fixed amount of spacing between each view.
- @param shouldSpaceInsets Whether the first and last views should be equally inset from their superview.
+ @param insetSpacing The amount of inset spacing of the first and last views from their superview.
  @return An array of constraints added.
  */
 - (PL__NSArray_of(NSLayoutConstraint *) *)autoDistributeViewsAlongAxis:(ALAxis)axis
                                                            alignedTo:(ALAttribute)alignment
                                                     withFixedSpacing:(CGFloat)spacing
-                                                        insetSpacing:(BOOL)shouldSpaceInsets
+                                                        insetSpacing:(CGFloat)insetSpacing
 {
     return [self autoDistributeViewsAlongAxis:axis
                                     alignedTo:alignment
                              withFixedSpacing:spacing
-                                 insetSpacing:shouldSpaceInsets
+                                 insetSpacing:insetSpacing
                                  matchedSizes:YES];
 }
 
@@ -275,7 +275,7 @@
  @param axis The axis along which to distribute the views.
  @param alignment The attribute to use to align all the views to one another.
  @param spacing The fixed amount of spacing between each view.
- @param shouldSpaceInsets Whether the first and last views should be equally inset from their superview.
+ @param insetSpacing The amount of inset spacing of the first and last views from their superview.
  @param shouldMatchSizes Whether all views will be constrained to be the same size in the dimension along the axis.
                          NOTE: All views must specify an intrinsic content size if passing NO, otherwise the layout will be ambiguous!
  @return An array of constraints added.
@@ -283,7 +283,7 @@
 - (PL__NSArray_of(NSLayoutConstraint *) *)autoDistributeViewsAlongAxis:(ALAxis)axis
                                                            alignedTo:(ALAttribute)alignment
                                                     withFixedSpacing:(CGFloat)spacing
-                                                        insetSpacing:(BOOL)shouldSpaceInsets
+                                                        insetSpacing:(CGFloat)insetSpacing
                                                         matchedSizes:(BOOL)shouldMatchSizes
 {
     NSAssert([self al_containsMinimumNumberOfViews:1], @"This array must contain at least 1 view to distribute.");
@@ -308,8 +308,6 @@
             NSAssert(nil, @"Not a valid ALAxis.");
             return nil;
     }
-    CGFloat leadingSpacing = shouldSpaceInsets ? spacing : 0.0;
-    CGFloat trailingSpacing = shouldSpaceInsets ? spacing : 0.0;
     
     PL__NSMutableArray_of(NSLayoutConstraint *) *constraints = [NSMutableArray new];
     ALView *previousView = nil;
@@ -327,14 +325,14 @@
             }
             else {
                 // First view
-                [constraints addObject:[view autoPinEdgeToSuperviewEdge:firstEdge withInset:leadingSpacing]];
+                [constraints addObject:[view autoPinEdgeToSuperviewEdge:firstEdge withInset:insetSpacing]];
             }
             previousView = view;
         }
     }
     if (previousView) {
         // Last View
-        [constraints addObject:[previousView autoPinEdgeToSuperviewEdge:lastEdge withInset:trailingSpacing]];
+        [constraints addObject:[previousView autoPinEdgeToSuperviewEdge:lastEdge withInset:insetSpacing]];
     }
     return constraints;
 }
@@ -356,7 +354,7 @@
     return [self autoDistributeViewsAlongAxis:axis
                                     alignedTo:alignment
                                 withFixedSize:size
-                                 insetSpacing:YES];
+                                 insetSpacing:size];
 }
 
 /**
@@ -367,13 +365,13 @@
  @param axis The axis along which to distribute the views.
  @param alignment The attribute to use to align all the views to one another.
  @param size The fixed size of each view in the dimension along the given axis.
- @param shouldSpaceInsets Whether the first and last views should be equally inset from their superview.
+ @param insetSpacing The amount of inset spacing of the first and last views from their superview.
  @return An array of constraints added.
  */
 - (PL__NSArray_of(NSLayoutConstraint *) *)autoDistributeViewsAlongAxis:(ALAxis)axis
                                                            alignedTo:(ALAttribute)alignment
                                                        withFixedSize:(CGFloat)size
-                                                        insetSpacing:(BOOL)shouldSpaceInsets
+                                                        insetSpacing:(CGFloat)insetSpacing
 {
     NSAssert([self al_containsMinimumNumberOfViews:1], @"This array must contain at least 1 view to distribute.");
     ALDimension fixedDimension;
@@ -416,14 +414,8 @@
         ALView *view = shouldFlipOrder ? views[numberOfViews - i - 1] : views[i];
         view.translatesAutoresizingMaskIntoConstraints = NO;
         [constraints addObject:[view autoSetDimension:fixedDimension toSize:size]];
-        CGFloat multiplier, constant;
-        if (shouldSpaceInsets) {
-            multiplier = (i * 2.0 + 2.0) / (numberOfViews + 1.0);
-            constant = (multiplier - 1.0) * size / 2.0;
-        } else {
-            multiplier = (i * 2.0) / (numberOfViews - 1.0);
-            constant = (-multiplier + 1.0) * size / 2.0;
-        }
+        CGFloat multiplier = (i * 2.0 + 2.0) / (numberOfViews + 1.0);
+        CGFloat constant = (multiplier - 1.0) * insetSpacing / 2.0;
         // If the multiplier is very close to 0, set it to the minimum value to prevent the second item in the constraint from being lost. Filed as rdar://19168380
         if (fabs(multiplier) < kMULTIPLIER_MIN_VALUE) {
             multiplier = kMULTIPLIER_MIN_VALUE;
