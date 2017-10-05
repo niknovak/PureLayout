@@ -676,7 +676,16 @@
 {
     if (PL__PureLayout_MinSysVer_iOS_7_0) {
         self.translatesAutoresizingMaskIntoConstraints = NO;
-        NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeTop relatedBy:relation toItem:viewController.topLayoutGuide attribute:NSLayoutAttributeBottom multiplier:1.0 constant:inset];
+        
+        id topGuide = viewController.topLayoutGuide;
+        NSLayoutAttribute guideAttribute = NSLayoutAttributeBottom;
+        
+        if (@available(iOS 11.0, *)) {
+            topGuide = viewController.view.safeAreaLayoutGuide;
+            guideAttribute = NSLayoutAttributeTop;
+        }
+        
+        NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeTop relatedBy:relation toItem:topGuide attribute:guideAttribute multiplier:1.0 constant:inset];
         [viewController.view al_addConstraint:constraint]; // Can't use autoInstall because the layout guide is not a view
         return constraint;
     } else {
@@ -710,7 +719,16 @@
     }
     if (PL__PureLayout_MinSysVer_iOS_7_0) {
         self.translatesAutoresizingMaskIntoConstraints = NO;
-        NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeBottom relatedBy:relation toItem:viewController.bottomLayoutGuide attribute:NSLayoutAttributeTop multiplier:1.0 constant:inset];
+        
+        id bottomGuide = viewController.bottomLayoutGuide;
+        NSLayoutAttribute guideAttribute = NSLayoutAttributeTop;
+        
+        if (@available(iOS 11.0, *)) {
+            bottomGuide = viewController.view.safeAreaLayoutGuide;
+            guideAttribute = NSLayoutAttributeBottom;
+        }
+        
+        NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:self attribute:NSLayoutAttributeBottom relatedBy:relation toItem:bottomGuide attribute:guideAttribute multiplier:1.0 constant:inset];
         [viewController.view al_addConstraint:constraint]; // Can't use autoInstall because the layout guide is not a view
         return constraint;
     } else {
